@@ -450,8 +450,8 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
             <thead>
               <tr>
                 <th>Nome / Prestador</th>
-                <th>Tipo</th>
-                <th>Valor</th>
+                <th style="color:var(--green)">↑ Entrada</th>
+                <th style="color:var(--red)">↓ Saída</th>
                 <th>Vencimento</th>
                 <th>Status</th>
                 <th>Banco</th>
@@ -980,12 +980,12 @@ function renderTabela(rows){
   tb.innerHTML=rows.map(r=>{
     const sc=r.confianca;
     const bc=sc>=70?'cf-hi':sc>=40?'cf-mid':'cf-lo';
-    const tipoCls=r.tipo==='ENTRADA'?'tipo-entrada':r.tipo==='SAÍDA'?'tipo-saida':'';
-    const tipoHtml=r.tipo?`<span class="${tipoCls}">${r.tipo==='ENTRADA'?'↑ Entrada':'↓ Saída'}</span>`:'<span style="color:var(--text3);font-size:11px">—</span>';
+    const vEnt = r.entrada>0 ? `<span style="color:var(--green);font-weight:500;font-variant-numeric:tabular-nums">${fmtBRL(r.entrada)}</span>` : `<span style="color:var(--text3)">—</span>`;
+    const vSai = r.despesa>0 ? `<span style="color:var(--red);font-weight:500;font-variant-numeric:tabular-nums">${fmtBRL(r.despesa)}</span>` : r.entrada===0&&r.valor>0 ? `<span style="color:var(--red);font-weight:500;font-variant-numeric:tabular-nums">${fmtBRL(r.valor)}</span>` : `<span style="color:var(--text3)">—</span>`;
     return `<tr>
       <td class="nc"><strong title="${r.nome}">${r.nome||'—'}</strong>${r.empresa?`<small>${r.empresa}</small>`:''}</td>
-      <td>${tipoHtml}</td>
-      <td class="val-c">${fmtBRL(r.valor)}</td>
+      <td>${vEnt}</td>
+      <td>${vSai}</td>
       <td style="color:var(--text2);white-space:nowrap">${r.vencto||'—'}</td>
       <td><span class="badge ${badgeCls(r.status)}">${r.status}</span></td>
       <td style="color:var(--text2)">${r.banco||'—'}</td>
@@ -1032,11 +1032,12 @@ function swTab(id,btn){
 // ════════════════════════════════════════════════
 function expCSV(){
   const h=['ORI','Empresa','Nome/Prestador','Nº Docto','Parcela','Descrição','Conta','Posto',
-           'Tipo','Valor','Retenção','Entrada','Despesa','Vencto','DtPgto','Forma Pgt.',
+           'Entrada','Saída','Retenção','Vencto','DtPgto','Forma Pgt.',
            'Status','Banco','Confiança (%)','Observação','Match encontrado','Valor match'];
   const body=resultados.map(r=>[
     r.ori,r.empresa,r.nome,r.ndoc,r.parcela,r.descricao,r.conta,r.posto,
-    r.tipo,r.valor,r.retencao,r.entrada,r.despesa,r.vencto,r.dtpgto,r.forma_pgt,
+    r.entrada||0, r.despesa>0?r.despesa:r.entrada===0&&r.valor>0?r.valor:0,
+    r.retencao,r.vencto,r.dtpgto,r.forma_pgt,
     r.status,r.banco,r.confianca,r.obs,r.matchNome,r.matchValor
   ]);
   const csv=[h,...body].map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
@@ -1048,11 +1049,11 @@ function expXLSX(){
 
   // ── Sheet 1: Conciliação ──
   const headers=['ORI','Empresa','Prestador de Serviços','Nº Docto','Parcela','Descrição','Conta','Posto',
-                 'Tipo','Valor','Retenção','Entrada','Despesa','Vencto','DtPgto','Forma de Pgt.',
+                 'Entrada','Saída','Retenção','Vencto','DtPgto','Forma de Pgt.',
                  'Status','Banco','Confiança (%)','Observação'];
   const data=resultados.map(r=>[
     r.ori,r.empresa,r.nome,r.ndoc,r.parcela,r.descricao,r.conta,r.posto,
-    r.tipo,r.valor,r.retencao,r.entrada,r.despesa,r.vencto,r.dtpgto,r.forma_pgt,
+    r.entrada||0,r.despesa>0?r.despesa:r.entrada===0&&r.valor>0?r.valor:0,r.retencao,r.vencto,r.dtpgto,r.forma_pgt,
     r.status,r.banco,r.confianca,r.obs
   ]);
 
