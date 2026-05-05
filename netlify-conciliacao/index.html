@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conciliação Financeira — P&P</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0d14;--bg2:#13131f;--bg3:#1a1a2e;--bg4:#22223a;
+  --surface:#1e1e30;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#f0f0f8;--text2:#9090b8;--text3:#55557a;
+  --accent:#7c6af7;--accent2:#a08ef9;
+  --green:#3dd68c;--green-bg:rgba(61,214,140,0.1);--green-border:rgba(61,214,140,0.25);
+  --red:#f16b6b;--red-bg:rgba(241,107,107,0.1);--red-border:rgba(241,107,107,0.25);
+  --amber:#f5b947;--amber-bg:rgba(245,185,71,0.1);--amber-border:rgba(245,185,71,0.25);
+  --blue:#5ba8f5;--blue-bg:rgba(91,168,245,0.1);--blue-border:rgba(91,168,245,0.25);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6;overflow-x:hidden}
+h1,h2,h3,h4,h5{font-family:'Syne',sans-serif;font-weight:600}
+button{font-family:'DM Sans',sans-serif;cursor:pointer}
+input,select{font-family:'DM Sans',sans-serif}
+
+/* ── HEADER ── */
+header{
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:0 2rem;display:flex;align-items:center;justify-content:space-between;
+  height:58px;position:sticky;top:0;z-index:200;backdrop-filter:blur(12px);
+}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{
+  width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.logo-mark svg{width:17px;height:17px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.logo-text{font-size:15px;font-weight:600;letter-spacing:-0.02em}
+.logo-text span{color:var(--accent2)}
+.header-badge{
+  display:flex;align-items:center;gap:6px;
+  background:var(--green-bg);border:1px solid var(--green-border);
+  border-radius:20px;padding:4px 10px;
+}
+.dot-pulse{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+.header-badge span{font-size:11px;color:var(--green);font-weight:500}
+
+/* ── LAYOUT ── */
+.app{display:grid;grid-template-columns:320px 1fr;min-height:calc(100vh - 58px)}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  background:var(--bg2);border-right:1px solid var(--border);
+  padding:1.25rem;display:flex;flex-direction:column;gap:1rem;
+  position:sticky;top:58px;height:calc(100vh - 58px);overflow-y:auto;
+}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+.section-lbl{
+  font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--text3);margin-bottom:.4rem;
+}
+
+/* ── DROP ZONE ── */
+.dz{
+  border:1.5px dashed var(--border2);border-radius:10px;padding:12px;
+  position:relative;cursor:pointer;transition:border-color .2s,background .2s;
+  background:var(--bg3);
+}
+.dz:hover,.dz.over{border-color:var(--accent);background:rgba(124,106,247,.06)}
+.dz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.dz-head{display:flex;align-items:center;gap:8px}
+.dz-ico{
+  width:30px;height:30px;border-radius:7px;display:flex;
+  align-items:center;justify-content:center;flex-shrink:0;
+}
+.dz-ico svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ico-bb{background:var(--blue-bg);color:var(--blue)}
+.ico-ext{background:var(--amber-bg);color:var(--amber)}
+.ico-mod{background:rgba(124,106,247,.15);color:var(--accent2)}
+.dz-info{}
+.dz-title{font-size:12px;font-weight:500;color:var(--text)}
+.dz-sub{font-size:10px;color:var(--text2)}
+
+.chips{display:flex;flex-direction:column;gap:3px;margin-top:6px}
+.chip{
+  display:flex;align-items:center;gap:6px;
+  background:var(--bg4);border-radius:6px;padding:4px 8px;
+  font-size:11px;color:var(--text2);
+}
+.chip-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.ctag{
+  font-size:9px;font-weight:700;padding:2px 5px;border-radius:3px;
+  text-transform:uppercase;letter-spacing:.04em;flex-shrink:0;
+}
+.ctag-bb{background:var(--blue-bg);color:var(--blue)}
+.ctag-caixa{background:var(--green-bg);color:var(--green)}
+.ctag-pdf{background:var(--red-bg);color:var(--red)}
+.ctag-xlsx{background:var(--amber-bg);color:var(--amber)}
+.ctag-mod{background:rgba(124,106,247,.15);color:var(--accent2)}
+.chip-rm{
+  width:14px;height:14px;border:none;background:transparent;
+  color:var(--text3);cursor:pointer;font-size:14px;line-height:1;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  border-radius:3px;transition:color .15s;
+}
+.chip-rm:hover{color:var(--red)}
+
+/* ── PROGRESS ── */
+.prog-wrap{display:none}
+.prog-bar{height:3px;background:var(--border2);border-radius:2px;overflow:hidden;margin-bottom:5px}
+.prog-fill{
+  height:100%;width:0%;border-radius:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  transition:width .4s ease;
+}
+.prog-lbl{font-size:11px;color:var(--text2);text-align:center}
+
+/* ── BTN CONCILIAR ── */
+.btn-run{
+  width:100%;padding:12px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;border:none;border-radius:10px;
+  font-size:14px;font-weight:600;font-family:'Syne',sans-serif;
+  cursor:pointer;transition:opacity .15s,transform .1s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  letter-spacing:.01em;
+}
+.btn-run:hover:not(:disabled){opacity:.9;transform:translateY(-1px)}
+.btn-run:active:not(:disabled){transform:translateY(0)}
+.btn-run:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── SIDEBAR ALERT ── */
+.s-alert{
+  padding:8px 12px;border-radius:8px;font-size:12px;
+  display:none;align-items:center;gap:7px;
+}
+.s-alert.ok{background:var(--green-bg);border:1px solid var(--green-border);color:var(--green);display:flex}
+.s-alert.err{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);display:flex}
+
+/* ── MAIN CONTENT ── */
+.content{padding:1.5rem;overflow-y:auto}
+
+/* ── WELCOME ── */
+.welcome{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:460px;text-align:center;gap:1rem;
+}
+.welcome-ico{
+  width:72px;height:72px;border-radius:18px;
+  background:rgba(124,106,247,.1);border:1px solid rgba(124,106,247,.2);
+  display:flex;align-items:center;justify-content:center;margin-bottom:.25rem;
+}
+.welcome-ico svg{width:30px;height:30px;stroke:var(--accent2);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.welcome h2{font-size:23px;font-weight:700;letter-spacing:-.02em}
+.welcome p{color:var(--text2);max-width:380px;font-size:13px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:.5rem;max-width:480px}
+.step{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:.75rem;text-align:center}
+.step-n{font-size:18px;font-weight:700;color:var(--accent2);font-family:'Syne',sans-serif}
+.step-l{font-size:11px;color:var(--text2);margin-top:2px}
+
+/* ── RESULT ── */
+#result{display:none}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:4px;margin-bottom:1.25rem}
+.tab{
+  padding:6px 14px;border-radius:7px;border:none;background:transparent;
+  color:var(--text2);font-size:13px;cursor:pointer;
+  transition:all .15s;font-family:'DM Sans',sans-serif;
+}
+.tab.on{background:var(--surface);color:var(--text);border:1px solid var(--border2)}
+.tab:hover:not(.on){color:var(--text)}
+.tab-pane{display:none}.tab-pane.on{display:block}
+
+/* ── METRICS ── */
+.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:1.25rem}
+.mcard{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:.85rem 1rem;
+}
+.ml{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.mv{font-size:22px;font-weight:700;font-family:'Syne',sans-serif;line-height:1}
+.ms{font-size:10px;color:var(--text2);margin-top:3px}
+.mv.g{color:var(--green)}.mv.r{color:var(--red)}.mv.a{color:var(--amber)}.mv.b{color:var(--blue)}.mv.w{color:var(--text)}
+
+/* ── TABLE TOOLBAR ── */
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;gap:8px;flex-wrap:wrap}
+.toolbar h3{font-size:14px;font-weight:600}
+.btn-group{display:flex;gap:6px}
+.btn-s{
+  padding:6px 11px;border-radius:7px;font-size:12px;font-weight:500;
+  cursor:pointer;border:1px solid var(--border2);background:var(--surface);
+  color:var(--text);transition:background .15s;
+  display:flex;align-items:center;gap:5px;
+}
+.btn-s:hover{background:var(--bg4)}
+.btn-s.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-s.pri:hover{opacity:.85}
+.btn-s svg{width:12px;height:12px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── FILTERS ── */
+.filters{display:flex;gap:8px;margin-bottom:.85rem;flex-wrap:wrap}
+.filters select,.filters input{
+  padding:7px 10px;border-radius:7px;border:1px solid var(--border2);
+  background:var(--surface);color:var(--text);font-size:12px;
+  outline:none;transition:border-color .15s;
+}
+.filters select:focus,.filters input:focus{border-color:var(--accent)}
+.filters input{flex:1;min-width:180px}
+.filters select option{background:var(--bg3)}
+
+/* ── TABLE ── */
+.tbl-wrap{
+  border:1px solid var(--border);border-radius:10px;
+  overflow:hidden;background:var(--surface);
+}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead{background:var(--bg3)}
+th{
+  padding:9px 12px;text-align:left;font-weight:500;
+  color:var(--text2);white-space:nowrap;font-size:10px;
+  border-bottom:1px solid var(--border);
+  letter-spacing:.05em;text-transform:uppercase;
+}
+td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr{transition:background .08s}
+tbody tr:hover td{background:rgba(255,255,255,.02)}
+
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 8px;border-radius:20px;
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;
+}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.badge.pago{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.badge.nao{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.badge.rev{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.badge.man{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+
+.conf{display:flex;align-items:center;gap:6px}
+.conf-n{font-size:11px;color:var(--text2);min-width:28px;text-align:right}
+.conf-bar{width:44px;height:4px;border-radius:2px;background:var(--border2);overflow:hidden;flex-shrink:0}
+.conf-fill{height:100%;border-radius:2px}
+.cf-hi{background:var(--green)}.cf-mid{background:var(--amber)}.cf-lo{background:var(--red)}
+
+.nc{max-width:195px}
+.nc strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:400}
+.nc small{color:var(--text2);font-size:10px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.obs-c{max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text2);font-size:11px}
+.val-c{font-weight:500;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* ── LOG ── */
+.log-box{
+  background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:1rem;max-height:520px;overflow-y:auto;
+  font-family:'DM Mono','Courier New',monospace;font-size:11px;line-height:1.9;
+}
+.log-box::-webkit-scrollbar{width:4px}
+.log-box::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+.lg{display:block}
+.lg.ok{color:var(--green)}.lg.no{color:var(--red)}.lg.rv{color:var(--amber)}.lg.inf{color:var(--blue)}.lg.def{color:var(--text2)}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:3rem;color:var(--text3);font-size:12px}
+.empty svg{margin:0 auto .5rem;display:block;opacity:.25;width:28px;height:28px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round}
+
+/* ── SPINNER ── */
+.spin{
+  width:15px;height:15px;border:2px solid rgba(255,255,255,.25);
+  border-top-color:#fff;border-radius:50%;animation:rot .6s linear infinite;flex-shrink:0;
+}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .app{grid-template-columns:1fr}
+  .sidebar{position:static;height:auto}
+  .metrics{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:600px){
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  header{padding:0 1rem}
+  .content,.sidebar{padding:1rem}
+}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 18 18"><path d="M2 5h14M2 9h9M2 13h6"/><path d="M13 11l2 2 3-3"/></svg>
+    </div>
+    <span class="logo-text">P<span>&</span>P — Conciliação <span>Financeira</span></span>
+  </div>
+  <div class="header-badge">
+    <div class="dot-pulse"></div>
+    <span>100% no browser • sem servidor</span>
+  </div>
+</header>
+
+<!-- APP -->
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div>
+      <div class="section-lbl">1 · Planilhas Simplifique</div>
+      <div class="dz" id="dz-s"
+        ondragover="dzOver(event,'dz-s')" ondragleave="dzOut('dz-s')" ondrop="dzDrop(event,'s')">
+        <input type="file" multiple accept=".xlsx,.xls,.csv" onchange="addFiles(this.files,'s')" onclick="this.value=''">
+        <div class="dz-head">
+          <div class="dz-ico ico-bb">
+            <svg viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M2 6h12M6 2v12"/></svg>
+          </div>
+          <div class="dz-info">
+            <div class="dz-title">BB / Caixa Simplifique</div>
+            <div class="dz-sub">.xlsx exportado do Simplifique</div>
+          </div>
+        </div>
+      </div>
+      <div class="chips" id="ch-s"></div>
+    </div>
+
+    <div>
+      <div class="section-lbl">2 · Extratos Bancários</div>
+      <div class="dz" id="dz-e"
+        ondragover="dzOver(event,'dz-e')" ondragleave="dzOut('dz-e')" ondrop="dzDrop(event,'e')">
+        <input type="file" multiple accept=".xlsx,.xls,.csv,.pdf" onchange="addFiles(this.files,'e')" onclick="this.value=''">
+        <div class="dz-head">
+          <div class="dz-ico ico-ext">
+            <svg viewBox="0 0 16 16"><path d="M3 2h7l3 3v9H3z"/><path d="M10 2v4h4"/><path d="M5 9h6M5 12h4"/></svg>
+          </div>
+          <div class="dz-info">
+            <div class="dz-title">Extratos PDF ou Excel</div>
+            <div class="dz-sub">.pdf / .xlsx do banco</div>
+          </div>
+        </div>
+      </div>
+      <div class="chips" id="ch-e"></div>
+    </div>
+
+    <div>
+      <div class="section-lbl">3 · Planilha Modelo</div>
+      <div class="dz" id="dz-m"
+        ondragover="dzOver(event,'dz-m')" ondragleave="dzOut('dz-m')" ondrop="dzDrop(event,'m')">
+        <input type="file" accept=".xlsx,.xls,.csv" onchange="addFiles(this.files,'m')" onclick="this.value=''">
+        <div class="dz-head">
+          <div class="dz-ico ico-mod">
+            <svg viewBox="0 0 16 16"><path d="M2 2h12v12H2z"/><path d="M2 6h12M6 2v12"/></svg>
+          </div>
+          <div class="dz-info">
+            <div class="dz-title">Controle Manual (P&P)</div>
+            <div class="dz-sub">.xlsx com Status e Banco</div>
+          </div>
+        </div>
+      </div>
+      <div class="chips" id="ch-m"></div>
+    </div>
+
+    <div class="prog-wrap" id="pw">
+      <div class="prog-bar"><div class="prog-fill" id="pf"></div></div>
+      <div class="prog-lbl" id="pl">Processando…</div>
+    </div>
+
+    <button class="btn-run" id="btn-run" onclick="run()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 8h12M9 4l4 4-4 4"/>
+      </svg>
+      Conciliar
+    </button>
+
+    <div class="s-alert" id="s-alert"></div>
+
+  </aside>
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <!-- WELCOME -->
+    <div class="welcome" id="welcome">
+      <div class="welcome-ico">
+        <svg viewBox="0 0 24 24"><path d="M9 17H7A5 5 0 0 1 7 7h1M15 7h1a5 5 0 0 1 0 10h-1M12 12H3m9 0 3-3m-3 3 3 3"/></svg>
+      </div>
+      <h2>Conciliação Automática</h2>
+      <p>Envie os arquivos ao lado e clique em <strong>Conciliar</strong>. Todo o processamento acontece direto no seu navegador.</p>
+      <div class="steps">
+        <div class="step"><div class="step-n">1</div><div class="step-l">Simplifique<br>BB / Caixa</div></div>
+        <div class="step"><div class="step-n">2</div><div class="step-l">Extrato<br>PDF / Excel</div></div>
+        <div class="step"><div class="step-n">3</div><div class="step-l">Planilha<br>Modelo P&P</div></div>
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div id="result">
+      <div class="tabs">
+        <button class="tab on" onclick="swTab('t-res',this)">Resultado</button>
+        <button class="tab" onclick="swTab('t-log',this)">Log</button>
+      </div>
+
+      <!-- TAB RESULTADO -->
+      <div id="t-res" class="tab-pane on">
+        <div class="metrics" id="metrics"></div>
+
+        <div class="toolbar">
+          <h3>Registros conciliados</h3>
+          <div class="btn-group">
+            <button class="btn-s" onclick="expCSV()">
+              <svg viewBox="0 0 12 12"><path d="M6 1v7M3 5l3 3 3-3M1 9v1a1 1 0 001 1h8a1 1 0 001-1V9"/></svg>
+              CSV
+            </button>
+            <button class="btn-s pri" onclick="expXLSX()">
+              <svg viewBox="0 0 12 12"><path d="M6 1v7M3 5l3 3 3-3M1 9v1a1 1 0 001 1h8a1 1 0 001-1V9"/></svg>
+              Exportar XLSX
+            </button>
+          </div>
+        </div>
+
+        <div class="filters">
+          <select id="f-st" onchange="filtrar()">
+            <option value="">Todos os status</option>
+            <option value="PAGO">Pago</option>
+            <option value="NÃO PAGO">Não pago</option>
+            <option value="REVISAR">Revisar</option>
+            <option value="PAGO (manual)">Pago (manual)</option>
+          </select>
+          <select id="f-bk" onchange="filtrar()">
+            <option value="">Todos os bancos</option>
+            <option value="BB">Banco do Brasil</option>
+            <option value="CAIXA">Caixa</option>
+            <option value="BNB">BNB</option>
+          </select>
+          <input id="f-q" placeholder="Buscar por nome…" oninput="filtrar()">
+        </div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome / Prestador</th>
+                <th>Valor</th>
+                <th>Vencimento</th>
+                <th>Status</th>
+                <th>Banco</th>
+                <th>Confiança</th>
+                <th>Observação</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+          <div class="empty" id="t-empty" style="display:none">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35M11 8v3M11 14h.01"/></svg>
+            Nenhum registro encontrado para os filtros selecionados.
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB LOG -->
+      <div id="t-log" class="tab-pane">
+        <div class="log-box" id="log-box"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- SheetJS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+
+// ════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════
+const S = { s:[], e:[], m:[] };   // uploaded files per category
+let resultados = [];
+let logs = [];
+
+// ════════════════════════════════════════════════
+//  DROP-ZONE
+// ════════════════════════════════════════════════
+function dzOver(ev,id){ ev.preventDefault(); document.getElementById(id).classList.add('over'); }
+function dzOut(id){ document.getElementById(id).classList.remove('over'); }
+function dzDrop(ev,cat){ ev.preventDefault(); dzOut('dz-'+cat); addFiles(ev.dataTransfer.files,cat); }
+
+function addFiles(files,cat){
+  Array.from(files).forEach(f=>{ if(!S[cat].find(x=>x.name===f.name)) S[cat].push(f); });
+  renderChips(cat);
+}
+function rmFile(cat,name){
+  S[cat]=S[cat].filter(f=>f.name!==name);
+  renderChips(cat);
+}
+function renderChips(cat){
+  const el=document.getElementById('ch-'+cat);
+  el.innerHTML=S[cat].map(f=>{
+    const ext=f.name.toLowerCase().endsWith('.pdf')?'pdf':'xlsx';
+    let tc,tl;
+    if(cat==='m'){tc='mod';tl='Modelo';}
+    else if(cat==='e'){tc=ext;tl=ext.toUpperCase();}
+    else{tc=f.name.toLowerCase().includes('bb')||f.name.toLowerCase().includes('brasil')?'bb':'caixa';tl=tc==='bb'?'BB':'Caixa';}
+    const nm=f.name.replace(/'/g,"\\'");
+    return `<div class="chip"><span class="ctag ctag-${tc}">${tl}</span><span class="chip-name" title="${f.name}">${f.name}</span><button class="chip-rm" onclick="rmFile('${cat}','${nm}')">×</button></div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════════
+function norm(s){
+  if(!s) return '';
+  return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim().replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim();
+}
+function parseValor(v){
+  if(v===null||v===undefined) return 0;
+  if(typeof v==='number') return Math.abs(v);
+  let s=String(v).replace(/R\$|\s/g,'').trim();
+  if(s.includes(',')&&s.includes('.')) s=s.replace(/\./g,'').replace(',','.');
+  else if(s.includes(',')) s=s.replace(',','.');
+  else if(s.includes('.')&&s.split('.').pop().length===3) s=s.replace('.','');
+  return Math.abs(parseFloat(s)||0);
+}
+function parseDate(d){
+  if(!d) return null;
+  if(d instanceof Date) return d;
+  const s=String(d).trim();
+  let m;
+  m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})/); if(m) return new Date(+m[3],+m[2]-1,+m[1]);
+  m=s.match(/^(\d{4})-(\d{2})-(\d{2})/); if(m) return new Date(+m[1],+m[2]-1,+m[3]);
+  m=s.match(/^(\d{2})-(\d{2})-(\d{4})/); if(m) return new Date(+m[3],+m[2]-1,+m[1]);
+  return null;
+}
+function dateDiff(a,b){
+  const da=parseDate(a), db=parseDate(b);
+  if(!da||!db) return 999;
+  return Math.abs((da-db)/86400000);
+}
+function fmtDate(d){
+  const p=parseDate(d); if(!p) return '';
+  return p.toLocaleDateString('pt-BR');
+}
+function fmtBRL(v){
+  return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function setProgress(pct,lbl){
+  document.getElementById('pf').style.width=pct+'%';
+  document.getElementById('pl').textContent=lbl;
+}
+function sAlert(msg,type){
+  const el=document.getElementById('s-alert');
+  el.className='s-alert '+(type==='ok'?'ok':'err');
+  el.textContent=msg;
+  el.style.display=msg?'flex':'none';
+}
+
+// ════════════════════════════════════════════════
+//  FUZZY (Levenshtein + token sort)
+// ════════════════════════════════════════════════
+function tokenSort(a){
+  return a.split(' ').filter(Boolean).sort().join(' ');
+}
+function levenshtein(a,b){
+  if(!a.length) return b.length;
+  if(!b.length) return a.length;
+  const m=[];
+  for(let i=0;i<=b.length;i++) m[i]=[i];
+  for(let j=0;j<=a.length;j++) m[0][j]=j;
+  for(let i=1;i<=b.length;i++){
+    for(let j=1;j<=a.length;j++){
+      m[i][j]=b[i-1]===a[j-1]?m[i-1][j-1]:Math.min(m[i-1][j-1]+1,Math.min(m[i][j-1]+1,m[i-1][j]+1));
+    }
+  }
+  return m[b.length][a.length];
+}
+function simRatio(a,b){
+  if(!a||!b) return 0;
+  const la=a.toLowerCase(), lb=b.toLowerCase();
+  if(la===lb) return 1;
+  const maxLen=Math.max(la.length,lb.length);
+  if(maxLen===0) return 1;
+  const dist=levenshtein(la,lb);
+  return 1-(dist/maxLen);
+}
+function tokenSortRatio(a,b){
+  return simRatio(tokenSort(a),tokenSort(b));
+}
+function partialRatio(a,b){
+  if(!a||!b) return 0;
+  const [shorter,longer]=a.length<=b.length?[a,b]:[b,a];
+  if(shorter.length===0) return 0;
+  let best=0;
+  for(let i=0;i<=longer.length-shorter.length;i++){
+    const sub=longer.substring(i,i+shorter.length);
+    const r=simRatio(shorter,sub);
+    if(r>best) best=r;
+  }
+  return best;
+}
+function fuzzyScore(a,b){
+  const ts=tokenSortRatio(a,b);
+  const pr=partialRatio(a,b);
+  return Math.max(ts,pr);
+}
+
+// ════════════════════════════════════════════════
+//  PARSERS
+// ════════════════════════════════════════════════
+function parseSimplifique(rows, banco){
+  const cols=Object.keys(rows[0]||{});
+  const cDet=cols.find(c=>/detalh|hist/i.test(c))||cols[0];
+  const cVal=cols.find(c=>/^valor$/i.test(c))||cols.find(c=>/valor/i.test(c));
+  const cDat=cols.find(c=>/data/i.test(c));
+  const cTip=cols.find(c=>/tipo/i.test(c));
+  if(!cVal) return [];
+  return rows.map(r=>({
+    nome: norm(r[cDet]||''),
+    valor: parseValor(r[cVal]),
+    data: r[cDat]||null,
+    tipo: String(r[cTip]||'').toLowerCase(),
+    banco
+  })).filter(r=>r.valor>0);
+}
+
+function parseExtrato(rows){
+  const cols=Object.keys(rows[0]||{});
+  const cNom=cols.find(c=>/hist|desc|nome|detalh|benef/i.test(c))||cols[0];
+  const cVal=cols.find(c=>/valor/i.test(c));
+  const cDat=cols.find(c=>/data/i.test(c));
+  if(!cVal) return [];
+  return rows.map(r=>({
+    nome: norm(r[cNom]||''),
+    valor: parseValor(r[cVal]),
+    data: r[cDat]||null,
+    banco:'extrato'
+  })).filter(r=>r.valor>0);
+}
+
+function parseModelo(rows){
+  const cols=Object.keys(rows[0]||{});
+  const cNom=cols.find(c=>/prest|nome|fornec|serv/i.test(c))||cols[0];
+  const cEmp=cols.find(c=>/empresa/i.test(c));
+  const cDesc=cols.find(c=>/descri/i.test(c));
+  const cVal=cols.find(c=>/^valor$/i.test(c))||cols.find(c=>/valor/i.test(c));
+  const cDesp=cols.find(c=>/despesa/i.test(c));
+  const cEnt=cols.find(c=>/entrada/i.test(c));
+  const cRet=cols.find(c=>/reten/i.test(c));
+  const cVenc=cols.find(c=>/vencto|venc/i.test(c));
+  const cPgto=cols.find(c=>/dtpgto|dt.*pg|pgto/i.test(c));
+  const cSt=cols.find(c=>/status/i.test(c));
+  const cBco=cols.find(c=>/banco/i.test(c));
+  const cFpgt=cols.find(c=>/forma/i.test(c));
+  const cOri=cols.find(c=>/^ori$/i.test(c));
+  const cParc=cols.find(c=>/parcela/i.test(c));
+  const cNdoc=cols.find(c=>/docto|n.*doc/i.test(c));
+  const cConta=cols.find(c=>/^conta$/i.test(c));
+  const cPosto=cols.find(c=>/posto/i.test(c));
+
+  return rows.map(r=>{
+    const nome=String(r[cNom]||'').trim();
+    if(!nome||nome==='undefined') return null;
+    const vl=parseValor(r[cVal]);
+    const vd=parseValor(r[cDesp]);
+    const ve=parseValor(r[cEnt]);
+    const banco=String(r[cBco]||'').toUpperCase().replace('BRASIL','BB');
+    return {
+      ori: String(r[cOri]||'').trim(),
+      empresa: cEmp?String(r[cEmp]||'').trim():'',
+      nome,
+      nomeN: norm(nome),
+      ndoc: cNdoc?String(r[cNdoc]||'').trim():'',
+      parcela: cParc?String(r[cParc]||'').trim():'',
+      descricao: cDesc?String(r[cDesc]||'').trim():'',
+      conta: cConta?String(r[cConta]||'').trim():'',
+      posto: cPosto?String(r[cPosto]||'').trim():'',
+      valor: Math.max(vl,vd,ve),
+      retencao: parseValor(r[cRet]),
+      entrada: ve, despesa: vd,
+      vencto: r[cVenc]||null,
+      dtpgto: r[cPgto]||null,
+      forma_pgt: cFpgt?String(r[cFpgt]||'').trim():'',
+      statusOrig: cSt?String(r[cSt]||'').toUpperCase().trim():'',
+      banco,
+    };
+  }).filter(Boolean);
+}
+
+// ════════════════════════════════════════════════
+//  CONCILIAÇÃO
+// ════════════════════════════════════════════════
+function scoreMatch(reg, ext){
+  const rv=reg.valor, ev=ext.valor;
+  let sv;
+  if(rv===0&&ev===0) sv=0.5;
+  else if(rv===0||ev===0) return {score:0,ok:false};
+  else{
+    const pct=Math.abs(rv-ev)/Math.max(rv,ev);
+    if(pct<=0.001) sv=1.0;
+    else if(pct<=0.02) sv=0.85;
+    else if(pct<=0.05) sv=0.5;
+    else return {score:0,ok:false};
+  }
+  const sn=fuzzyScore(reg.nomeN, ext.nome);
+  const ref=reg.dtpgto||reg.vencto;
+  const dd=dateDiff(ref, ext.data);
+  const sd=dd<=0?1:dd<=3?.9:dd<=7?.6:dd<=15?.3:0;
+  const total=sv*0.45+sn*0.40+sd*0.15;
+
+  const obs=[];
+  if(sv>=0.85) obs.push('valor exato');
+  if(sn>=0.85) obs.push('nome idêntico');
+  else if(sn>=0.6) obs.push('nome similar');
+  if(dd<=3) obs.push(`data ±${dd}d`);
+  return {score:Math.round(total*1000)/1000, obs: obs.join(' | ')||'match parcial'};
+}
+
+function conciliar(modelo, extratos){
+  const res=[];
+  const logs=[];
+  const THRESH_PAGO=0.58, THRESH_REV=0.35;
+
+  for(const reg of modelo){
+    let best=0, bestExt=null, bestObs='';
+    for(const ext of extratos){
+      const {score,obs,ok}=scoreMatch(reg,ext);
+      if(ok===false) continue;
+      if(score>best){best=score;bestExt=ext;bestObs=obs;}
+    }
+
+    let status, conf=Math.round(best*100), obs_out;
+    const banco=bestExt?.banco||reg.banco;
+
+    if(best>=THRESH_PAGO){
+      status='PAGO';
+      obs_out=`Encontrado — ${bestObs}`;
+      logs.push(`[PAGO ${conf}%] ${reg.nome.substring(0,42)} → ${bestExt?.nome?.substring(0,32)||''} | ${fmtBRL(reg.valor)}`);
+    } else if(best>=THRESH_REV){
+      status='REVISAR';
+      obs_out=`Match incerto (${bestObs}) — revisar`;
+      logs.push(`[REVISAR ${conf}%] ${reg.nome.substring(0,42)} | ${fmtBRL(reg.valor)}`);
+    } else {
+      if(reg.statusOrig==='PAGO'){
+        status='PAGO (manual)'; conf=50;
+        obs_out='Pago conforme planilha modelo (sem match no extrato)';
+      } else {
+        status='NÃO PAGO'; conf=conf||0;
+        obs_out='Não localizado nos extratos';
+      }
+      logs.push(`[${status}] ${reg.nome.substring(0,42)} | ${fmtBRL(reg.valor)}`);
+    }
+
+    res.push({
+      ori:reg.ori, empresa:reg.empresa, nome:reg.nome,
+      ndoc:reg.ndoc, parcela:reg.parcela, descricao:reg.descricao,
+      conta:reg.conta, posto:reg.posto,
+      valor:reg.valor, retencao:reg.retencao, entrada:reg.entrada, despesa:reg.despesa,
+      vencto:fmtDate(reg.vencto), dtpgto:fmtDate(reg.dtpgto),
+      forma_pgt:reg.forma_pgt,
+      status, banco:reg.banco||banco, confianca:conf, obs:obs_out,
+      matchNome:bestExt?.nome||'', matchValor:bestExt?.valor||0,
+    });
+  }
+
+  const pg=res.filter(r=>r.status.includes('PAGO')&&!r.status.includes('NÃO')).length;
+  const np=res.filter(r=>r.status==='NÃO PAGO').length;
+  const rv=res.filter(r=>r.status==='REVISAR').length;
+  logs.unshift(`=== RESUMO: ${pg} pagos | ${np} não pagos | ${rv} para revisar | ${res.length} total ===`);
+  return {res,logs};
+}
+
+// ════════════════════════════════════════════════
+//  READ FILE → ROWS
+// ════════════════════════════════════════════════
+function readXLSX(file){
+  return new Promise(res=>{
+    const r=new FileReader();
+    r.onload=e=>{
+      const wb=XLSX.read(e.target.result,{type:'binary',cellDates:true,raw:false});
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+      res(rows);
+    };
+    r.readAsBinaryString(file);
+  });
+}
+
+// Basic PDF text extraction via reading as text — for proper PDF support
+// users should convert to Excel; we attempt best-effort parse
+async function readPDFAsText(file){
+  return new Promise(res=>{
+    const r=new FileReader();
+    r.onload=e=>{
+      // Try to extract readable text from PDF binary
+      const text=e.target.result;
+      // Extract numbers and text patterns
+      const lines=[];
+      const lineRx=/([A-Za-záàãâéêíóôõúüçÁÀÃÂÉÊÍÓÔÕÚÜÇ][A-Za-záàãâéêíóôõúüçÁÀÃÂÉÊÍÓÔÕÚÜÇ0-9 .,-]{5,})\s+([\d]{1,3}(?:[.,]\d{3})*[.,]\d{2})/g;
+      let m;
+      while((m=lineRx.exec(text))!==null){
+        const nome=m[1].trim();
+        const valor=parseValor(m[2]);
+        if(valor>0&&nome.length>4) lines.push({nome:norm(nome),valor,data:null,banco:'pdf'});
+      }
+      res(lines);
+    };
+    r.readAsBinaryString(file);
+  });
+}
+
+// ════════════════════════════════════════════════
+//  MAIN RUN
+// ════════════════════════════════════════════════
+async function run(){
+  const total=S.s.length+S.e.length+S.m.length;
+  if(total===0){sAlert('Adicione pelo menos um arquivo para conciliar.','err');return;}
+  sAlert('','');
+
+  const btn=document.getElementById('btn-run');
+  btn.disabled=true;
+  btn.innerHTML='<div class="spin"></div> Processando…';
+  document.getElementById('pw').style.display='block';
+
+  try{
+    let simpData=[], extData=[], modelData=[];
+    setProgress(10,'Lendo planilhas Simplifique…');
+
+    for(const f of S.s){
+      const rows=await readXLSX(f);
+      const banco=f.name.toLowerCase().includes('bb')||f.name.toLowerCase().includes('brasil')?'BB':'CAIXA';
+      simpData.push(...parseSimplifique(rows,banco));
+    }
+
+    setProgress(30,'Lendo extratos…');
+    for(const f of S.e){
+      if(f.name.toLowerCase().endsWith('.pdf')){
+        const rows=await readPDFAsText(f);
+        extData.push(...rows);
+      } else {
+        const rows=await readXLSX(f);
+        extData.push(...parseExtrato(rows));
+      }
+    }
+
+    setProgress(55,'Lendo planilha modelo…');
+    for(const f of S.m){
+      const rows=await readXLSX(f);
+      modelData.push(...parseModelo(rows));
+    }
+
+    if(!modelData.length&&simpData.length){
+      simpData.forEach(s=>modelData.push({
+        ori:'',empresa:'',nome:s.nome,nomeN:s.nome,ndoc:'',parcela:'',
+        descricao:'',conta:'',posto:'',valor:s.valor,retencao:0,entrada:0,despesa:s.valor,
+        vencto:s.data,dtpgto:s.data,forma_pgt:'',statusOrig:'',banco:s.banco
+      }));
+    }
+
+    if(!modelData.length){sAlert('Nenhum dado encontrado nos arquivos.','err');return;}
+
+    setProgress(75,'Conciliando registros…');
+    const allExtratos=[...simpData,...extData];
+    const {res,logs:lg}=conciliar(modelData,allExtratos);
+    resultados=res; logs=lg;
+
+    setProgress(100,'Concluído!');
+    await new Promise(r=>setTimeout(r,400));
+
+    document.getElementById('pw').style.display='none';
+    renderResult();
+
+    const pg=res.filter(r=>r.status.includes('PAGO')&&!r.status.includes('NÃO')).length;
+    const np=res.filter(r=>r.status==='NÃO PAGO').length;
+    sAlert(`✓ ${pg} pagos · ${np} não pagos · ${res.length} total`,'ok');
+
+  } catch(err){
+    sAlert('Erro: '+err.message,'err');
+    console.error(err);
+  } finally {
+    btn.disabled=false;
+    btn.innerHTML='<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8h12M9 4l4 4-4 4"/></svg> Conciliar';
+  }
+}
+
+// ════════════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════════════
+function renderResult(filtered){
+  const rows=filtered||resultados;
+  document.getElementById('welcome').style.display='none';
+  document.getElementById('result').style.display='block';
+
+  // Metrics
+  const pg=rows.filter(r=>r.status.includes('PAGO')&&!r.status.includes('NÃO'));
+  const np=rows.filter(r=>r.status==='NÃO PAGO');
+  const rv=rows.filter(r=>r.status==='REVISAR');
+  const vPg=pg.reduce((a,r)=>a+r.valor,0);
+  const vNp=np.reduce((a,r)=>a+r.valor,0);
+  document.getElementById('metrics').innerHTML=`
+    <div class="mcard"><div class="ml">Total</div><div class="mv w">${rows.length}</div><div class="ms">registros</div></div>
+    <div class="mcard"><div class="ml">Pagos</div><div class="mv g">${pg.length}</div><div class="ms">${rows.length?Math.round(pg.length/rows.length*100):0}% do total</div></div>
+    <div class="mcard"><div class="ml">Não pagos</div><div class="mv r">${np.length}</div><div class="ms">pendentes</div></div>
+    <div class="mcard"><div class="ml">Revisar</div><div class="mv a">${rv.length}</div><div class="ms">match incerto</div></div>
+    <div class="mcard"><div class="ml">Valor pago</div><div class="mv b" style="font-size:14px;padding-top:4px">${fmtBRL(vPg)}</div><div class="ms">pend: ${fmtBRL(vNp)}</div></div>`;
+
+  renderTabela(rows);
+  renderLog();
+}
+
+function badgeCls(s){
+  if(s==='PAGO') return 'pago';
+  if(s==='NÃO PAGO') return 'nao';
+  if(s==='REVISAR') return 'rev';
+  return 'man';
+}
+
+function renderTabela(rows){
+  const tb=document.getElementById('tbody');
+  const em=document.getElementById('t-empty');
+  if(!rows.length){tb.innerHTML='';em.style.display='block';return;}
+  em.style.display='none';
+  tb.innerHTML=rows.map(r=>{
+    const sc=r.confianca;
+    const bc=sc>=70?'cf-hi':sc>=40?'cf-mid':'cf-lo';
+    return `<tr>
+      <td class="nc"><strong title="${r.nome}">${r.nome||'—'}</strong>${r.empresa?`<small>${r.empresa}</small>`:''}</td>
+      <td class="val-c">${fmtBRL(r.valor)}</td>
+      <td style="color:var(--text2);white-space:nowrap">${r.vencto||'—'}</td>
+      <td><span class="badge ${badgeCls(r.status)}">${r.status}</span></td>
+      <td style="color:var(--text2)">${r.banco||'—'}</td>
+      <td><div class="conf"><span class="conf-n">${sc}%</span><div class="conf-bar"><div class="conf-fill ${bc}" style="width:${sc}%"></div></div></div></td>
+      <td class="obs-c" title="${r.obs}">${r.obs}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderLog(){
+  const el=document.getElementById('log-box');
+  el.innerHTML=logs.map(l=>{
+    let c='def';
+    if(l.includes('[PAGO')) c='ok';
+    else if(l.includes('[NÃO PAGO]')) c='no';
+    else if(l.includes('[REVISAR')) c='rv';
+    else if(l.includes('===')) c='inf';
+    return `<span class="lg ${c}">${l}</span>`;
+  }).join('\n');
+}
+
+function filtrar(){
+  const st=document.getElementById('f-st').value;
+  const bk=document.getElementById('f-bk').value;
+  const q=document.getElementById('f-q').value.toLowerCase();
+  const f=resultados.filter(r=>{
+    if(st&&r.status!==st) return false;
+    if(bk&&!r.banco.includes(bk)) return false;
+    if(q&&!r.nome.toLowerCase().includes(q)&&!(r.obs||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  renderTabela(f);
+}
+
+function swTab(id,btn){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  btn.classList.add('on');
+}
+
+// ════════════════════════════════════════════════
+//  EXPORT
+// ════════════════════════════════════════════════
+function expCSV(){
+  const h=['ORI','Empresa','Nome/Prestador','Nº Docto','Parcela','Descrição','Conta','Posto',
+           'Valor','Retenção','Entrada','Despesa','Vencto','DtPgto','Forma Pgt.',
+           'Status','Banco','Confiança (%)','Observação','Match encontrado','Valor match'];
+  const body=resultados.map(r=>[
+    r.ori,r.empresa,r.nome,r.ndoc,r.parcela,r.descricao,r.conta,r.posto,
+    r.valor,r.retencao,r.entrada,r.despesa,r.vencto,r.dtpgto,r.forma_pgt,
+    r.status,r.banco,r.confianca,r.obs,r.matchNome,r.matchValor
+  ]);
+  const csv=[h,...body].map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  dl('data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv),`conciliacao_${today()}.csv`);
+}
+
+function expXLSX(){
+  const wb=XLSX.utils.book_new();
+
+  // ── Sheet 1: Conciliação ──
+  const headers=['ORI','Empresa','Prestador de Serviços','Nº Docto','Parcela','Descrição','Conta','Posto',
+                 'Valor','Retenção','Entrada','Despesa','Vencto','DtPgto','Forma de Pgt.',
+                 'Status','Banco','Confiança (%)','Observação'];
+  const data=resultados.map(r=>[
+    r.ori,r.empresa,r.nome,r.ndoc,r.parcela,r.descricao,r.conta,r.posto,
+    r.valor,r.retencao,r.entrada,r.despesa,r.vencto,r.dtpgto,r.forma_pgt,
+    r.status,r.banco,r.confianca,r.obs
+  ]);
+
+  const ws=XLSX.utils.aoa_to_sheet([headers,...data]);
+
+  // Column widths
+  ws['!cols']=[{wch:5},{wch:22},{wch:32},{wch:12},{wch:8},{wch:40},{wch:22},{wch:18},
+               {wch:12},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:14},{wch:16},{wch:8},{wch:10},{wch:36}];
+
+  XLSX.utils.book_append_sheet(wb,ws,'Conciliação');
+
+  // ── Sheet 2: Resumo ──
+  const pg=resultados.filter(r=>r.status.includes('PAGO')&&!r.status.includes('NÃO'));
+  const np=resultados.filter(r=>r.status==='NÃO PAGO');
+  const rv=resultados.filter(r=>r.status==='REVISAR');
+  const vPg=pg.reduce((a,r)=>a+r.valor,0);
+  const vNp=np.reduce((a,r)=>a+r.valor,0);
+  const resumo=[
+    ['RESUMO DA CONCILIAÇÃO',''],
+    ['Gerado em', new Date().toLocaleString('pt-BR')],
+    [''],
+    ['Total de registros', resultados.length],
+    ['Pagos', pg.length],
+    ['Não pagos', np.length],
+    ['Para revisar', rv.length],
+    [''],
+    ['Valor total pago', vPg],
+    ['Valor pendente', vNp],
+    ['% Conciliado', resultados.length?+(pg.length/resultados.length*100).toFixed(1):0],
+  ];
+  const ws2=XLSX.utils.aoa_to_sheet(resumo);
+  ws2['!cols']=[{wch:22},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,ws2,'Resumo');
+
+  XLSX.writeFile(wb,`conciliacao_${today()}.xlsx`);
+}
+
+function today(){ return new Date().toISOString().slice(0,10); }
+function dl(href,name){ const a=document.createElement('a'); a.href=href; a.download=name; a.click(); }
+
+</script>
+</body>
+</html>
