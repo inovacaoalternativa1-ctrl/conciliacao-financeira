@@ -241,6 +241,8 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 .badge.nao{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
 .badge.rev{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
 .badge.man{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.tipo-entrada{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(61,214,140,0.12);color:var(--green);border:1px solid var(--green-border);white-space:nowrap}
+.tipo-saida{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(241,107,107,0.12);color:var(--red);border:1px solid var(--red-border);white-space:nowrap}
 
 .conf{display:flex;align-items:center;gap:6px}
 .conf-n{font-size:11px;color:var(--text2);min-width:28px;text-align:right}
@@ -448,6 +450,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
             <thead>
               <tr>
                 <th>Nome / Prestador</th>
+                <th>Tipo</th>
                 <th>Valor</th>
                 <th>Vencimento</th>
                 <th>Status</th>
@@ -614,20 +617,29 @@ function fuzzyScore(a,b){
 // ════════════════════════════════════════════════
 //  PARSERS
 // ════════════════════════════════════════════════
-function parseSimplifique(rows, banco){
+function parseSimplifique(rows, banco, fileName){
   const cols=Object.keys(rows[0]||{});
   const cDet=cols.find(c=>/detalh|hist/i.test(c))||cols[0];
   const cVal=cols.find(c=>/^valor$/i.test(c))||cols.find(c=>/valor/i.test(c));
   const cDat=cols.find(c=>/data/i.test(c));
   const cTip=cols.find(c=>/tipo/i.test(c));
   if(!cVal) return [];
-  return rows.map(r=>({
-    nome: norm(r[cDet]||''),
-    valor: parseValor(r[cVal]),
-    data: r[cDat]||null,
-    tipo: String(r[cTip]||'').toLowerCase(),
-    banco
-  })).filter(r=>r.valor>0);
+  return rows.map(r=>{
+    const tipoRaw=String(r[cTip]||'').toLowerCase();
+    // Normaliza tipo: entrada vs saída
+    let tipo='';
+    if(/receb|entrada|créd|cred|deposit|pix.*rec/i.test(tipoRaw)) tipo='ENTRADA';
+    else if(/enviad|saída|saida|déb|deb|pag|transfer.*env/i.test(tipoRaw)) tipo='SAÍDA';
+    else tipo=tipoRaw?tipoRaw.toUpperCase():'';
+    return {
+      nome: norm(r[cDet]||''),
+      valor: parseValor(r[cVal]),
+      data: r[cDat]||null,
+      tipo,
+      banco,
+      fileName: fileName||''
+    };
+  }).filter(r=>r.valor>0);
 }
 
 function parseExtrato(rows){
@@ -671,6 +683,8 @@ function parseModelo(rows){
     const vd=parseValor(r[cDesp]);
     const ve=parseValor(r[cEnt]);
     const banco=String(r[cBco]||'').toUpperCase().replace('BRASIL','BB');
+    // Tipo: se tem valor em Entrada → ENTRADA, se tem em Despesa → SAÍDA
+    const tipo = ve>0 ? 'ENTRADA' : vd>0 ? 'SAÍDA' : vl>0 ? 'SAÍDA' : '';
     return {
       ori: String(r[cOri]||'').trim(),
       empresa: cEmp?String(r[cEmp]||'').trim():'',
@@ -683,7 +697,7 @@ function parseModelo(rows){
       posto: cPosto?String(r[cPosto]||'').trim():'',
       valor: Math.max(vl,vd,ve),
       retencao: parseValor(r[cRet]),
-      entrada: ve, despesa: vd,
+      entrada: ve, despesa: vd, tipo,
       vencto: r[cVenc]||null,
       dtpgto: r[cPgto]||null,
       forma_pgt: cFpgt?String(r[cFpgt]||'').trim():'',
@@ -722,13 +736,19 @@ function scoreMatch(reg, ext){
   return {score:Math.round(total*1000)/1000, obs: obs.join(' | ')||'match parcial'};
 }
 
-function conciliar(modelo, extratos){
+function conciliar(modelo, extratos, simpBancos, temModelo){
   const res=[];
   const logs=[];
   const THRESH_PAGO=0.58, THRESH_REV=0.35;
 
+  // Separate by source for specific obs messages
+  const extSimpBB=extratos.filter(e=>e.banco==='BB');
+  const extSimpCX=extratos.filter(e=>e.banco==='CAIXA');
+  const extExtrato=extratos.filter(e=>e.banco==='extrato'||e.banco==='pdf');
+
   for(const reg of modelo){
     let best=0, bestExt=null, bestObs='';
+
     for(const ext of extratos){
       const {score,obs,ok}=scoreMatch(reg,ext);
       if(ok===false) continue;
@@ -736,35 +756,63 @@ function conciliar(modelo, extratos){
     }
 
     let status, conf=Math.round(best*100), obs_out;
-    const banco=bestExt?.banco||reg.banco;
+    const bancoReg=reg.banco||'';
 
     if(best>=THRESH_PAGO){
       status='PAGO';
-      obs_out=`Encontrado — ${bestObs}`;
+      const fonte=bestExt?.banco==='BB'?'Simplifique BB':bestExt?.banco==='CAIXA'?'Simplifique Caixa':bestExt?.banco==='pdf'?'Extrato PDF':'Extrato';
+      obs_out=`Encontrado no ${fonte} — ${bestObs}`;
       logs.push(`[PAGO ${conf}%] ${reg.nome.substring(0,42)} → ${bestExt?.nome?.substring(0,32)||''} | ${fmtBRL(reg.valor)}`);
+
     } else if(best>=THRESH_REV){
       status='REVISAR';
-      obs_out=`Match incerto (${bestObs}) — revisar`;
+      // Identify WHERE it's missing
+      const faltaBB = simpBancos.has('BB') && extSimpBB.length>0 && !extSimpBB.some(e=>scoreMatch(reg,e).score>=THRESH_REV);
+      const faltaCX = simpBancos.has('CAIXA') && extSimpCX.length>0 && !extSimpCX.some(e=>scoreMatch(reg,e).score>=THRESH_REV);
+      const partes=[];
+      if(faltaBB) partes.push('Simplifique BB');
+      if(faltaCX) partes.push('Simplifique Caixa');
+      if(!temModelo) partes.push('planilha manual');
+      obs_out=partes.length>0
+        ? `Revisar (Não encontrado no ${partes.join(' e ')})`
+        : `Revisar — match parcial (${bestObs})`;
       logs.push(`[REVISAR ${conf}%] ${reg.nome.substring(0,42)} | ${fmtBRL(reg.valor)}`);
+
     } else {
+      // No match — identify source
+      const faltaBB = simpBancos.has('BB');
+      const faltaCX = simpBancos.has('CAIXA');
+      const ausentes=[];
+      if(faltaBB) ausentes.push('Simplifique BB');
+      if(faltaCX) ausentes.push('Simplifique Caixa');
+      if(extExtrato.length>0) ausentes.push('Extrato');
+
       if(reg.statusOrig==='PAGO'){
         status='PAGO (manual)'; conf=50;
-        obs_out='Pago conforme planilha modelo (sem match no extrato)';
+        obs_out=ausentes.length>0
+          ? `Pago na planilha manual — Não localizado no ${ausentes.join(' / ')}`
+          : 'Pago conforme planilha manual (sem match no extrato)';
       } else {
         status='NÃO PAGO'; conf=conf||0;
-        obs_out='Não localizado nos extratos';
+        obs_out=ausentes.length>0
+          ? `Não encontrado no ${ausentes.join(' / ')}`
+          : 'Não localizado nos extratos';
       }
       logs.push(`[${status}] ${reg.nome.substring(0,42)} | ${fmtBRL(reg.valor)}`);
     }
+
+    // Tipo: from modelo (entrada/despesa) or from matched extrato
+    const tipo = reg.tipo || (bestExt?.tipo) || '';
 
     res.push({
       ori:reg.ori, empresa:reg.empresa, nome:reg.nome,
       ndoc:reg.ndoc, parcela:reg.parcela, descricao:reg.descricao,
       conta:reg.conta, posto:reg.posto,
       valor:reg.valor, retencao:reg.retencao, entrada:reg.entrada, despesa:reg.despesa,
+      tipo,
       vencto:fmtDate(reg.vencto), dtpgto:fmtDate(reg.dtpgto),
       forma_pgt:reg.forma_pgt,
-      status, banco:reg.banco||banco, confianca:conf, obs:obs_out,
+      status, banco:reg.banco||bestExt?.banco||'', confianca:conf, obs:obs_out,
       matchNome:bestExt?.nome||'', matchValor:bestExt?.valor||0,
     });
   }
@@ -829,12 +877,15 @@ async function run(){
 
   try{
     let simpData=[], extData=[], modelData=[];
+    // Track which simplifique banks were loaded
+    const simpBancos=new Set();
     setProgress(10,'Lendo planilhas Simplifique…');
 
     for(const f of S.s){
       const rows=await readXLSX(f);
       const banco=f.name.toLowerCase().includes('bb')||f.name.toLowerCase().includes('brasil')?'BB':'CAIXA';
-      simpData.push(...parseSimplifique(rows,banco));
+      simpBancos.add(banco);
+      simpData.push(...parseSimplifique(rows,banco,f.name));
     }
 
     setProgress(30,'Lendo extratos…');
@@ -866,7 +917,8 @@ async function run(){
 
     setProgress(75,'Conciliando registros…');
     const allExtratos=[...simpData,...extData];
-    const {res,logs:lg}=conciliar(modelData,allExtratos);
+    const temModelo=S.m.length>0;
+    const {res,logs:lg}=conciliar(modelData,allExtratos,simpBancos,temModelo);
     resultados=res; logs=lg;
 
     setProgress(100,'Concluído!');
@@ -928,8 +980,11 @@ function renderTabela(rows){
   tb.innerHTML=rows.map(r=>{
     const sc=r.confianca;
     const bc=sc>=70?'cf-hi':sc>=40?'cf-mid':'cf-lo';
+    const tipoCls=r.tipo==='ENTRADA'?'tipo-entrada':r.tipo==='SAÍDA'?'tipo-saida':'';
+    const tipoHtml=r.tipo?`<span class="${tipoCls}">${r.tipo==='ENTRADA'?'↑ Entrada':'↓ Saída'}</span>`:'<span style="color:var(--text3);font-size:11px">—</span>';
     return `<tr>
       <td class="nc"><strong title="${r.nome}">${r.nome||'—'}</strong>${r.empresa?`<small>${r.empresa}</small>`:''}</td>
+      <td>${tipoHtml}</td>
       <td class="val-c">${fmtBRL(r.valor)}</td>
       <td style="color:var(--text2);white-space:nowrap">${r.vencto||'—'}</td>
       <td><span class="badge ${badgeCls(r.status)}">${r.status}</span></td>
@@ -977,11 +1032,11 @@ function swTab(id,btn){
 // ════════════════════════════════════════════════
 function expCSV(){
   const h=['ORI','Empresa','Nome/Prestador','Nº Docto','Parcela','Descrição','Conta','Posto',
-           'Valor','Retenção','Entrada','Despesa','Vencto','DtPgto','Forma Pgt.',
+           'Tipo','Valor','Retenção','Entrada','Despesa','Vencto','DtPgto','Forma Pgt.',
            'Status','Banco','Confiança (%)','Observação','Match encontrado','Valor match'];
   const body=resultados.map(r=>[
     r.ori,r.empresa,r.nome,r.ndoc,r.parcela,r.descricao,r.conta,r.posto,
-    r.valor,r.retencao,r.entrada,r.despesa,r.vencto,r.dtpgto,r.forma_pgt,
+    r.tipo,r.valor,r.retencao,r.entrada,r.despesa,r.vencto,r.dtpgto,r.forma_pgt,
     r.status,r.banco,r.confianca,r.obs,r.matchNome,r.matchValor
   ]);
   const csv=[h,...body].map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
@@ -993,19 +1048,17 @@ function expXLSX(){
 
   // ── Sheet 1: Conciliação ──
   const headers=['ORI','Empresa','Prestador de Serviços','Nº Docto','Parcela','Descrição','Conta','Posto',
-                 'Valor','Retenção','Entrada','Despesa','Vencto','DtPgto','Forma de Pgt.',
+                 'Tipo','Valor','Retenção','Entrada','Despesa','Vencto','DtPgto','Forma de Pgt.',
                  'Status','Banco','Confiança (%)','Observação'];
   const data=resultados.map(r=>[
     r.ori,r.empresa,r.nome,r.ndoc,r.parcela,r.descricao,r.conta,r.posto,
-    r.valor,r.retencao,r.entrada,r.despesa,r.vencto,r.dtpgto,r.forma_pgt,
+    r.tipo,r.valor,r.retencao,r.entrada,r.despesa,r.vencto,r.dtpgto,r.forma_pgt,
     r.status,r.banco,r.confianca,r.obs
   ]);
 
   const ws=XLSX.utils.aoa_to_sheet([headers,...data]);
-
-  // Column widths
   ws['!cols']=[{wch:5},{wch:22},{wch:32},{wch:12},{wch:8},{wch:40},{wch:22},{wch:18},
-               {wch:12},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:14},{wch:16},{wch:8},{wch:10},{wch:36}];
+               {wch:10},{wch:12},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:14},{wch:16},{wch:8},{wch:10},{wch:42}];
 
   XLSX.utils.book_append_sheet(wb,ws,'Conciliação');
 
